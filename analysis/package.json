@@ -1,0 +1,15 @@
+{
+  "name": "twitcoin-tweets-analysis",
+  "version": "1.0.0",
+  "description": "parsing JSON tweets and retrieving statistics",
+  "main": "tweets-statistics.js",
+  "dependencies": {
+    "JSONStream": "^1.3.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Federico Franzoni",
+  "license": "MIT"
+}
