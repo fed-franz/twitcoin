@@ -35,7 +35,7 @@ var fs = require('fs'),
 
 var tcount = 0; //Tweets counter
 
-fs.createReadStream(tweetfile)
+var readStream = fs.createReadStream(tweetfile)
     .pipe(replaceStream("}{", "}\n{"))
     .pipe(split("\n"))
 
@@ -48,9 +48,13 @@ fs.createReadStream(tweetfile)
         return console.error(e+'\n'+obj);
       }
       
-      console.log('['+tcount+']'+tw.id)
+      console.log(tw.id)
     })
     
-    .on('error', function (err) {
+    readStream.on('error', function (err) {
       console.log(err)
+    })
+
+    readStream.on('close', function () {
+      console.log("Total Number of tweets: "+tcount)
     })
