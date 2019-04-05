@@ -34,27 +34,39 @@ var fs = require('fs'),
     split = require('split');
 
 var tcount = 0; //Tweets counter
+var n = 1
 
-var readStream = fs.createReadStream(tweetfile)
-    .pipe(replaceStream("}{", "}\n{"))
-    .pipe(split("\n"))
+function parseTweetFile(filename) {
+  if (!fs.existsSync(filename+'-'+n)) {
+    return console.log("DONE")
+  }
 
-    .on('data', function (obj) {
-      tcount++;
+  var readStream = fs.createReadStream(filename+'-'+n)
+  .pipe(replaceStream("}{", "}\n{"))
+  .pipe(split("\n"))
 
-      try {
-        var tw = JSON.parse(obj)
-      } catch (e) {
-        return console.error(e+'\n'+obj);
-      }
-      
-      console.log(tw.id)
-    })
+  .on('data', function (obj) {
+    tcount++;
+
+    try {
+      var tw = JSON.parse(obj)
+    } catch (e) {
+      return console.error(e+'\n'+obj);
+    }
     
-    readStream.on('error', function (err) {
-      console.log(err)
-    })
+    console.log(tw.id)
+  })
+  
+  readStream.on('error', function (err) {
+    return console.log(err)
+  })
 
-    readStream.on('close', function () {
-      console.log("Total Number of tweets: "+tcount)
-    })
+  readStream.on('close', function () {
+    console.log("Total Number of tweets: "+tcount)
+
+    n++
+    parseTweetFile(filename) 
+  })  
+}
+
+  parseTweetFile(tweetfile)
