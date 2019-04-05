@@ -38,7 +38,7 @@ var n = 1
 
 function parseTweetFile(filename) {
   if (!fs.existsSync(filename+'-'+n)) {
-    return console.log("DONE")
+    return showResults()
   }
 
   var readStream = fs.createReadStream(filename+'-'+n)
@@ -53,8 +53,6 @@ function parseTweetFile(filename) {
     } catch (e) {
       return console.error(e+'\n'+obj);
     }
-    
-    console.log(tw.id)
   })
   
   readStream.on('error', function (err) {
@@ -62,11 +60,13 @@ function parseTweetFile(filename) {
   })
 
   readStream.on('close', function () {
-    console.log("Total Number of tweets: "+tcount)
-
     n++
     parseTweetFile(filename) 
   })  
+}
+
+function showResults() {
+  console.log("Total Number of tweets: "+tcount)
 }
 
   parseTweetFile(tweetfile)
