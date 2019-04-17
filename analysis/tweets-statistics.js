@@ -100,6 +100,9 @@ function analyzeTwit(tw) {
 /**
  * RENDERER
  */
+var statsfolder = '../data/stats/'
+var hashtagStatsFile = 'hashtag-stats.txt'
+
 function showResults() {
   console.log("Total Number of tweets: "+tcount)
 
@@ -115,7 +118,9 @@ function showResults() {
 
   // console.log(util.inspect(items, {showHidden: false, depth: null}))
 
-  fs.writeFileSync('./freq.txt', util.inspect(items, {showHidden: false, depth: null, maxArrayLength: null}) , 'utf-8'); 
+  fs.writeFileSync(statsfolder+hashtagStatsFile, util.inspect(items, {showHidden: false, depth: null, maxArrayLength: null}) , 'utf-8'); 
+
+  //TODO Try console.table() - print table with elements of array
 }
 
 /* RUN */
