@@ -62,53 +62,64 @@ function parseTweetFile(filename) {
  * TWEET FILE PARSERS
  */
 var hashtagCount = {}
+var symbolsCount = {}
 
 function analyzeTwit(tw) {
+
+  // Print tweet ID
+  console.log(JSON.stringify(tw.id_str))
 
   /* WORD ANALYSIS */
   //Most common words
   //ISSUE: how to exclude common words? - i.e. how to select relevant words?
 
-  //Hashtags
-  console.log(JSON.stringify(tw.id_str))
-  tw.entities.hashtags.forEach(tag => {
-    console.log(tag.text)
+  //Tweet elements
+  var tweet
+  var text
+  var hashtags
+
+  if(tw.truncated == true){
+    tweet = tw.extended_tweet
+    text = tweet.full_text
+  }
+  else{
+    tweet = tw
+    text = tweet.text
+  }
+  
+  hashtags = tweet.entities.hashtags
+  symbols = tweet.entities.symbols
+
+  // Count hashtags
+  hashtags.forEach(tag => {
+    console.log('#'+tag.text)
     if(hashtagCount[tag.text])
       hashtagCount[tag.text]+=1;
     else
     hashtagCount[tag.text]=1;
-    // console.log(hashtagCount[tag.text]);
-    
   });
 
-  /* COIN ANALYSIS */
-  //Number of tweets per coin - i.e. most popular coins
-
-  //Content of tweets? NLP problem - is there any tool?
-
-  //Per each coin:
-  //  - related keywords
-  //  - related coins
-
-  /* USER ANALYSIS */
-  // Users analysis
-  //  - retrieve users data
-  //      - statistics
-  //      - followers
+  // Count symbols ($)
+  symbols.forEach(sym => {
+    console.log('$'+sym.text)
+    if(symbolsCount[sym.text])
+      symbolsCount[sym.text]+=1;
+    else
+    symbolsCount[sym.text]=1;
+  });
 }
 
 /**
- * RENDERER
+ * OUTPUT
  */
 var statsfolder = '../data/stats/'
 var hashtagStatsFile = 'hashtag-stats.txt'
+var symbolStatsFile = 'symbol-stats.txt'
 
-function showResults() {
-  console.log("Total Number of tweets: "+tcount)
-
+function getSortedDict(dict){
   // Create items array
-  var items = Object.keys(hashtagCount).map(function(key) {
-    return [key, hashtagCount[key]];
+  var items = Object.keys(dict).map(function(key) {
+    return [key, dict[key]];
   });
 
   // Sort the array based on the second element
@@ -116,9 +127,21 @@ function showResults() {
     return second[1] - first[1];
   });
 
-  // console.log(util.inspect(items, {showHidden: false, depth: null}))
+  const inspectOptions = {showHidden: false, depth: null, maxArrayLength: null}
+  return util.inspect(items, inspectOptions); 
+}
 
-  fs.writeFileSync(statsfolder+hashtagStatsFile, util.inspect(items, {showHidden: false, depth: null, maxArrayLength: null}) , 'utf-8'); 
+/* Output results */
+function showResults() {
+  console.log("Total Number of tweets: "+tcount)
+
+  // Check and create Stats folder
+  if (!fs.existsSync(statsfolder)){
+    fs.mkdirSync(statsfolder);
+  }
+
+  fs.writeFileSync(statsfolder+hashtagStatsFile, getSortedDict(hashtagCount), 'utf-8'); 
+  fs.writeFileSync(statsfolder+symbolStatsFile, getSortedDict(symbolsCount), 'utf-8'); 
 
   //TODO Try console.table() - print table with elements of array
 }
