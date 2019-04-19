@@ -38,14 +38,13 @@ function parseTweetFile(filename) {
   .pipe(split("\n"))
 
   .on('data', function (obj) {
-    tcount++;
-
     try {
       var tw = JSON.parse(obj)
       analyzeTwit(tw)
     } catch (e) {
       return console.error(e+'\n'+obj);
     }
+    tcount++;
   })
   
   readStream.on('error', function (err) {
@@ -63,11 +62,12 @@ function parseTweetFile(filename) {
  */
 var hashtagCount = {}
 var symbolsCount = {}
+var wordCount = {}
 
 function analyzeTwit(tw) {
 
   // Print tweet ID
-  console.log(JSON.stringify(tw.id_str))
+  console.log('\n'+JSON.stringify(tw.id_str))
 
   /* WORD ANALYSIS */
   //Most common words
@@ -77,6 +77,7 @@ function analyzeTwit(tw) {
   var tweet
   var text
   var hashtags
+  var words
 
   if(tw.truncated == true){
     tweet = tw.extended_tweet
@@ -90,13 +91,17 @@ function analyzeTwit(tw) {
   hashtags = tweet.entities.hashtags
   symbols = tweet.entities.symbols
 
+  console.log('||||||||||||||||||||||||||||')
+  console.log(text)
+  console.log('||||||||||||||||||||||||||||')
+
   // Count hashtags
   hashtags.forEach(tag => {
     console.log('#'+tag.text)
     if(hashtagCount[tag.text])
       hashtagCount[tag.text]+=1;
     else
-    hashtagCount[tag.text]=1;
+      hashtagCount[tag.text]=1;
   });
 
   // Count symbols ($)
@@ -105,8 +110,31 @@ function analyzeTwit(tw) {
     if(symbolsCount[sym.text])
       symbolsCount[sym.text]+=1;
     else
-    symbolsCount[sym.text]=1;
+      symbolsCount[sym.text]=1;
   });
+
+  // TODO Count URLs
+  // TODO Mentions
+
+  // Count words
+  var arr = text.split(" ")
+  if(arr[0]=='RT') arr.splice(0,1)
+  arr.map(function (word) {
+    word=word.trim() //Remove leading and trailing spaces
+    //TODO Remove leading and trailing special chars --> ": , ! . < ; ' " > [ ] { } ` ~ = + - ? /"
+
+    //word=word.split('@')[0] //TODO Handle # @ $ signs in the middle of a word --> split all chars at text level
+    if(word.charAt(0)!='#' && word.charAt(0)!='$' && word.charAt(0)!='@' && word.substring(0,4) != "http" && word!=''){
+      console.log('"'+word+'"')
+      if(wordCount[word])
+        wordCount[word]+=1;
+      else
+        wordCount[word]=1;  
+    }
+  });
+
+  console.log('.');
+  
 }
 
 /**
@@ -115,7 +143,9 @@ function analyzeTwit(tw) {
 var statsfolder = '../data/stats/'
 var hashtagStatsFile = 'hashtag-stats.txt'
 var symbolStatsFile = 'symbol-stats.txt'
+var wordStatsFile = 'word-stats.txt'
 
+/* getSortedDict */
 function getSortedDict(dict){
   // Create items array
   var items = Object.keys(dict).map(function(key) {
@@ -142,6 +172,7 @@ function showResults() {
 
   fs.writeFileSync(statsfolder+hashtagStatsFile, getSortedDict(hashtagCount), 'utf-8'); 
   fs.writeFileSync(statsfolder+symbolStatsFile, getSortedDict(symbolsCount), 'utf-8'); 
+  fs.writeFileSync(statsfolder+wordStatsFile, getSortedDict(wordCount), 'utf-8'); 
 
   //TODO Try console.table() - print table with elements of array
 }
