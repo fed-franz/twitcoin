@@ -8,17 +8,39 @@ util.inspect.defaultOptions.maxArrayLength = null;
 util.inspect.defaultOptions.showHidden = false;
 /*__________________________________________________________________________*/
 
+const LOG = false
 
-/* Load coin list */
-const coinList = fs.readFileSync('top100coins.txt').toString().split("\n");
-// for(c of coinList){
-//   console.log(c)
-// }
+/**
+ * UTILS
+ */
+function extractHostname(url) {
+  var hostname;
+  //find & remove protocol (http, ftp, etc.) and get hostname
+
+  if (url.indexOf("//") > -1) {
+      hostname = url.split('/')[2];
+  }
+  else {
+      hostname = url.split('/')[0];
+  }
+
+  //find & remove port number
+  hostname = hostname.split(':')[0];
+  //find & remove "?"
+  hostname = hostname.split('?')[0];
+
+  return hostname;
+}
+
 
 /**
  * TWEET FILE PARSERS
  */
-// Get file pathname
+
+ /* Load coin list */
+const coinList = fs.readFileSync('top100coins.txt').toString().split("\n");
+
+ // Get file pathname
 const tweetfile = (process.argv.slice(2))[0]
 
 if (tweetfile == null){
@@ -73,20 +95,22 @@ function parseTweetFile(filename) {
 /**
  * TWEET ANALYSIS
  */
-var hashtagCount = {}
+var hashtagsCount = {}
 var symbolsCount = {}
-var wordCount = {}
-var coinStats = {} //TODO Load from top100coins
+var mentionsCount = {}
+var wordsCount = {}
+var urlsCount = {}
+var coinStats = {}
 
-for(c of coinList) {
-  // console.log(c);
-  
+for(c of coinList) {  
   coinStats[c] = {
-    "aliases": [],
+    // "aliases": [],
     "count": 0,
-    "symbols": {},
     "hashtags": {},
-    "words": {}
+    "symbols": {},
+    "mentions": {},
+    "words": {},
+    "urls": {} //TODO save domains only
   }
 }
 
@@ -95,9 +119,11 @@ for(c of coinList) {
 //TODO Write function to link a keyword to a coin (BTC, #Bitcoin, bitcoin, $Bitcoin) - can we generalize it?
 function analyzeTwit(tw) {
   var curTweet = {
-    "symbols" : [],
     "hashtags" : [],
-    "words" : [],
+    "symbols" : [],
+    "mentions": [],
+    "words" : [],    
+    "urls": [],
     "coins": []
   }
 
@@ -116,71 +142,66 @@ function analyzeTwit(tw) {
     tweet = tw
     text = tweet.text
   }  
-  var hashtags = tweet.entities.hashtags
-  var symbols = tweet.entities.symbols
-  //var words
 
   //_ LOG text _/
-  console.log('||||||||||||||||||||||||||||')
-  console.log(text)
-  console.log('||||||||||||||||||||||||||||')
+  if(LOG){
+    console.log('||||||||||||||||||||||||||||\n'+text+'\n||||||||||||||||||||||||||||')
+  }
 
-  /* Symbols ($) */
-  symbols.forEach(sym_obj => {
-    const sym = sym_obj.text
-    console.log('$'+sym)
+  /* Parse Tweet */
+  var words = text.match(/http[^\s]*|[#@$]?[a-zA-Z0-9]+/g)
+  
+  if(words[0]=='RT') words.splice(0,1)
+  words.map(function (word) {
+    if(LOG) console.log(word)
 
-    /* Add symbol to list */
-    if(!curTweet.symbols.includes(sym)) //TODO Shall we include duplicates?
-      curTweet.symbols.push(sym)
+    if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){
+      var list
+      const char0 = word.charAt(0);
 
-    /* Keep track of mentioned coins */
-    if(coinList.includes(sym) && !curTweet.coins.includes(sym)){
-      curTweet.coins.push(sym)
-    }
-  });
+      switch(char0) {
+        case '@':
+        case '#':
+        case '$':
+          word = word.substr(1)
+          switch(char0){
+            case '@':
+              list = curTweet.mentions
+              break;
+            case '#':
+              list = curTweet.hashtags
+              break;
+            case '$':
+              list = curTweet.symbols
+              break;
+          }
+        break;
 
-  /* Hashtags */
-  hashtags.forEach(tag_obj => {
-    const tag = tag_obj.text
-    console.log('#'+tag)
+        default:
+            list = curTweet.words
+      }
 
-    /* Add symbol to list */
-    if(!curTweet.hashtags.includes(tag)) //TODO Shall we include duplicates?
-      curTweet.hashtags.push(tag)
-
-    /* Keep track of mentioned coins */
-    if(coinList.includes(tag) && !curTweet.coins.includes(tag)){ //TODO Check coin aliases?
-      curTweet.coins.push(tag)
-    }
-  });
-
-  // TODO Count URLs
-  // TODO Mentions
-
-  /* Words */
-  // TODO Use parser to count hashtags/symbols/mentions/URLs ? -- this would include also hashtags not detected by Twitter
-  var arr = text.split(" ")
-  if(arr[0]=='RT' || arr[0].charAt(0)=='@') arr.splice(0,1)
-  arr.map(function (word) {
-    word=word.trim() //Remove leading and trailing spaces
-    //TODO Remove leading and trailing special chars --> ": , ! . < ; ' " > [ ] { } ` ~ = + - ? /"
-    //word=word.split('@')[0] //TODO Handle # @ $ signs in the middle of a word --> split all chars at text level
-
-    const char0 = word.charAt(0);
-    if(word!='' && char0!='#' && char0!='$' && char0!='@' && word.substring(0,4)!="http"){
-      console.log('"'+word+'"')
-
-      /* Add symbol to list */
-      if(!curTweet.words.includes(word)) //TODO Shall we include duplicates?
-        curTweet.words.push(word)
+      /* Add keyword to curTweet list */
+      if(!list.includes(word))
+        list.push(word)
 
       /* Keep track of mentioned coins */
-      if(coinList.includes(word) && !curTweet.coins.includes(word)){ //TODO Check coin aliases?
+      if(coinList.includes(word) && !curTweet.coins.includes(word)) //TODO Check coin aliases?
         curTweet.coins.push(word)
-      }
     }
   });
+
+  /* Parse URLs */
+  for(u of tweet.entities.urls){
+    const url = extractHostname(u.expanded_url)
+    if(LOG) console.log("URL: "+url);
+    
+    /* Add keyword to curTweet list */
+    if(!curTweet.urls.includes(url))
+      curTweet.urls.push(url)
+  }
+
+  if(LOG) console.log(inspectObject(curTweet))
 
 
   /*_____ UPDATE GLOBAL STATS _____*/
@@ -202,10 +223,10 @@ function analyzeTwit(tw) {
   /* Update hashtags stats */
   for(h of curTweet.hashtags){
     /* Global Stats */
-    if(hashtagCount[h])
-      hashtagCount[h]++;
+    if(hashtagsCount[h])
+      hashtagsCount[h]++;
     else
-      hashtagCount[h]=1;
+      hashtagsCount[h]=1;
 
     /* Coin Stats */
     for(c of curTweet.coins){
@@ -233,13 +254,46 @@ function analyzeTwit(tw) {
     }
   }
 
+  /* Update mentions stats */
+  for(m of curTweet.mentions){
+    /* Global Stats */
+    if(mentionsCount[m])
+      mentionsCount[m]++;
+    else
+      mentionsCount[m]=1;
+
+    /* Coin Stats */
+    for(c of curTweet.coins){
+      if(coinStats[c].mentions[m])
+        coinStats[c].mentions[m]++;
+      else
+        coinStats[c].mentions[m]=1;
+    }
+  }
+
+  for(u of curTweet.urls){
+    /* Global Stats */
+    if(urlsCount[u])
+      urlsCount[u]++;
+    else
+      urlsCount[u]=1;
+
+    /* Coin Stats */
+    for(c of curTweet.coins){
+      if(coinStats[c].urls[u])
+        coinStats[c].urls[u]++;
+      else
+        coinStats[c].urls[u]=1;
+    }
+  }
+
   /* Update words stats */
   for(w of curTweet.words){
     /* Global Stats */
-    if(wordCount[w])
-      wordCount[w]++;
+    if(wordsCount[w])
+      wordsCount[w]++;
     else
-      wordCount[w]=1;
+      wordsCount[w]=1;
 
     /* Coin Stats */
     for(c of curTweet.coins){
@@ -265,6 +319,8 @@ const statsfolder = '../data/stats/'
 const hashtagStatsFile = 'hashtag-stats.txt'
 const symbolStatsFile = 'symbol-stats.txt'
 const wordStatsFile = 'word-stats.txt'
+const mentionStatsFile = 'mention-stats.txt'
+const urlStatsFile = 'url-stats.txt'
 const coinStatsFile = 'coin-stats.txt'
 
 function inspectObject(obj){
@@ -296,9 +352,11 @@ function showResults() {
     fs.mkdirSync(statsfolder);
   }
 
-  fs.writeFileSync(statsfolder+symbolStatsFile, inspectObject(getSortedDict(symbolsCount)), 'utf-8'); 
-  fs.writeFileSync(statsfolder+hashtagStatsFile, inspectObject(getSortedDict(hashtagCount)), 'utf-8'); 
-  fs.writeFileSync(statsfolder+wordStatsFile, inspectObject(getSortedDict(wordCount)), 'utf-8'); 
+  fs.writeFileSync(statsfolder+symbolStatsFile, inspectObject(getSortedDict(symbolsCount)), 'utf-8');
+  fs.writeFileSync(statsfolder+hashtagStatsFile, inspectObject(getSortedDict(hashtagsCount)), 'utf-8');
+  fs.writeFileSync(statsfolder+mentionStatsFile, inspectObject(getSortedDict(mentionsCount)), 'utf-8');
+  fs.writeFileSync(statsfolder+urlStatsFile, inspectObject(getSortedDict(urlsCount)), 'utf-8');
+  fs.writeFileSync(statsfolder+wordStatsFile, inspectObject(getSortedDict(wordsCount)), 'utf-8');
 
   fs.writeFileSync(statsfolder+coinStatsFile, inspectObject(coinStats), 'utf-8'); 
 
