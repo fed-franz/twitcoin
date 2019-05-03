@@ -8,7 +8,7 @@ util.inspect.defaultOptions.maxArrayLength = null;
 util.inspect.defaultOptions.showHidden = false;
 /*__________________________________________________________________________*/
 
-const LOG = false
+const LOG = true
 
 /**
  * UTILS
@@ -110,7 +110,8 @@ for(c of coinList) {
     "symbols": {},
     "mentions": {},
     "words": {},
-    "urls": {} //TODO save domains only
+    "urls": {}, //TODO save domains only
+    "coins": {}
   }
 }
 
@@ -128,8 +129,10 @@ function analyzeTwit(tw) {
   }
 
   // Print tweet ID
-  console.log('----------------------------')
-  console.log('\n'+JSON.stringify(tw.id_str))
+  if(LOG){
+    console.log('----------------------------')
+    console.log('\n'+JSON.stringify(tw.id_str))  
+  }
 
   //_ Set Tweet Elements _//
   var tweet
@@ -149,15 +152,17 @@ function analyzeTwit(tw) {
   }
 
   /* Parse Tweet */
-  var words = text.match(/http[^\s]*|[#@$]?[a-zA-Z0-9]+/g)
+  var words = text.match(/http[^\s]*|[#@$]?[a-zA-Z0-9]+|\s[^\s\w$&+,:;=?@#|'<>.^*()%!-]+\s|[!?]+\s/g)
+  if(!words){ console.log("NULL!!!"); process.exit()}
   
   if(words[0]=='RT') words.splice(0,1)
   words.map(function (word) {
+    word = word.trim()
     if(LOG) console.log(word)
 
     if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){
       var list
-      const char0 = word.charAt(0);
+      const char0 = word.charAt(0)
 
       switch(char0) {
         case '@':
@@ -181,6 +186,10 @@ function analyzeTwit(tw) {
             list = curTweet.words
       }
 
+      /* Map !,?, and emoticons to ':)' */
+      if(word.match(/[^\s\w$&+,:;=?@#|'<>.^*()%!-]+|[!?]+/g))
+        word = ':)'
+
       /* Add keyword to curTweet list */
       if(!list.includes(word))
         list.push(word)
@@ -203,7 +212,6 @@ function analyzeTwit(tw) {
 
   if(LOG) console.log(inspectObject(curTweet))
 
-
   /*_____ UPDATE GLOBAL STATS _____*/
   // TODO write generic function ? -- we are repating the same code 3 times
 
@@ -213,11 +221,14 @@ function analyzeTwit(tw) {
     coinStats[c].count++;
 
     // TODO Can we do this at the end, by counting h/s/w per-coin stats?
-    // for(c2 of curTweet.coins){ 
-    //   if(c2 != c){
-    //     coinStats[c].coins[c2]
-    //   }
-    // }
+    for(c2 of curTweet.coins){ 
+      if(c2 != c){
+        if(coinStats[c].coins[c2])
+          coinStats[c].coins[c2]++;
+        else
+          coinStats[c].coins[c2]=1;
+      }
+    }
   }
 
   /* Update hashtags stats */
@@ -303,12 +314,9 @@ function analyzeTwit(tw) {
         coinStats[c].words[w]=1;
     }
   }
-  
-
-  // console.log("RELATED: "+inspectObject(coinStats[sym].words));
 
   // End of tweet marker for log output
-  console.log('.');
+  if(LOG) console.log('.');
   
 }
 
