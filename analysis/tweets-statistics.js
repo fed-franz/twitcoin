@@ -137,7 +137,7 @@ function analyzeTwit(tw) {
   //_ Set Tweet Elements _//
   var tweet
   var text
-  if(tw.truncated == true){
+  if(tw.extended_tweet){
     tweet = tw.extended_tweet
     text = tweet.full_text
   }
@@ -152,51 +152,60 @@ function analyzeTwit(tw) {
   }
 
   /* Parse Tweet */
-  var words = text.match(/http[^\s]*|[#@$]?[a-zA-Z0-9]+|\s[^\s\w$&+,:;=?@#|'<>.^*()%!-]+\s|[!?]+\s/g)
-  if(!words){ console.log("NULL!!!"); process.exit()}
+  var words = text.match(/http[^\s]*|[#@$]?\w+[’\-]?\w+|\$?\d+([\.:]\d+)?%?|[!?]+|[^\s\w$&+,:;=?@#|'’‘–<>.^*\/\[\]()%!-]+\s/g)
+  if(!words){ console.log("NULL!!!\n"+text); process.exit()}
   
   if(words[0]=='RT') words.splice(0,1)
   words.map(function (word) {
     word = word.trim()
-    if(LOG) console.log(word)
+    if(LOG) console.log(word)      
 
-    if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){
-      var list
-      const char0 = word.charAt(0)
-
-      switch(char0) {
-        case '@':
-        case '#':
-        case '$':
-          word = word.substr(1)
-          switch(char0){
-            case '@':
-              list = curTweet.mentions
-              break;
-            case '#':
-              list = curTweet.hashtags
-              break;
-            case '$':
-              list = curTweet.symbols
-              break;
-          }
-        break;
-
-        default:
-            list = curTweet.words
+    if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){ //If not a link
+      /* Map '!','?', emoticons --> '.!?.' */ //TODO Sentiment Analysis
+      if(word.match(/^[#$]?\d+[k]?$/g) || word.match(/^(\d+(\.\d+)?%?$)/g)){
+        if(LOG) console.log("----->'.#.'");
+        word = ".#."
+      }
+      /* Map numbers to '.#.' */
+      if(word.match(/[^\s\w$&+,:;=?@#|'’‘–<>.^*\/\[\]()%!-]+|[!?]+/g)){
+        if(LOG) console.log("----->'.!?.'");
+        word = '.!?.'
       }
 
-      /* Map !,?, and emoticons to ':)' */
-      if(word.match(/[^\s\w$&+,:;=?@#|'<>.^*()%!-]+|[!?]+/g))
-        word = ':)'
-
-      /* Add keyword to curTweet list */
-      if(!list.includes(word))
-        list.push(word)
-
-      /* Keep track of mentioned coins */
-      if(coinList.includes(word) && !curTweet.coins.includes(word)) //TODO Check coin aliases?
-        curTweet.coins.push(word)
+      if(word.length > 1){
+        var list
+        const char0 = word.charAt(0)
+  
+        switch(char0) {
+          case '@':
+          case '#':
+          case '$':
+            word = word.substr(1)
+            switch(char0){
+              case '@':
+                list = curTweet.mentions
+                break;
+              case '#':
+                list = curTweet.hashtags
+                break;
+              case '$':
+                list = curTweet.symbols
+                break;
+            }
+          break;
+  
+          default:
+              list = curTweet.words
+        }
+  
+        /* Add keyword to curTweet list */
+        if(!list.includes(word))
+          list.push(word)
+  
+        /* Keep track of mentioned coins */
+        if(coinList.includes(word) && !curTweet.coins.includes(word)) //TODO Check coin aliases?
+          curTweet.coins.push(word)
+      }
     }
   });
 
