@@ -169,7 +169,7 @@ function analyzeTwit(tw) {
   // [^\s\w$&+,:;=?@#|'’‘<>.^*\/\[\]()%!-]+? --> emoticons
   // [#@$]?\S+[’'-]?\S+ --> words
 
-  var words = text.match(/(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)+([£$€]?\d+[%£$€+\w]*))+|([@#$][\w\u00C0-\u00FF]+)|[^\w\s\u0100-\u1FFF@$#]|http[\S]+|([^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]+['’-]?)*[^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]/g)
+  var words = text.match(/(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+|([@#$][\w\u00C0-\u00FF]+)|[^\w\s\u0100-\u1FFF@$#]|http[\S]+|([^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]+['’-]?)*[^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]/g)
   if(!words){ console.log("NULL!!!\n"+text); process.exit()}
   else{
     words.map(function (word) {
@@ -178,17 +178,17 @@ function analyzeTwit(tw) {
   
       if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){ //If not a link
         /* Map numbers to '.#.' */
-        if(word.match(/^[#$]?(\d+[k%$]?[-.,:/]?)+$/g)){
+        if(word.match(/^(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+$/g)){
           if(LOG) console.log("----->'.#.'");
           word = ".#."
         }
         else
-        if(word.match(/^[&+,:;=|"'’‘–<>.^*\/\[\]()%-]$/g)){
+        if(word.match(/^[&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]$/g)){
           if(LOG) console.log("----->'.'");
         }
         else
         /* Map '!','?', emoticons --> '.!?.' */ //TODO Sentiment Analysis
-        if(word.match(/[^\s\w$&+,:;=?@#|'’‘–<>.^*\/\[\]()%!-]+|[!?]+/g)){
+        if(word.match(/^([^\w\s\u0100-\u1FFF@$#])+$/g)){
           if(LOG) console.log("----->'.!?.'");
           word = '.!?.'
         }
