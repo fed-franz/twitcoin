@@ -162,13 +162,6 @@ function analyzeTwit(tw) {
   }
 
   /* Parse Tweet */
-  // http[\w:/.]*|
-  // [@#$]?([\w][\w\d]*['’-]?)+|
-  
-  // http[\w:/.]* --> links
-  // [^\s\w$&+,:;=?@#|'’‘<>.^*\/\[\]()%!-]+? --> emoticons
-  // [#@$]?\S+[’'-]?\S+ --> words
-
   var words = text.match(/(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+|([@#$][\w\u00C0-\u00FF]+)|[^\w\s\u0100-\u1FFF@$#]|http[\S]+|([^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]+['’-]?)*[^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]/g)
   if(!words){ console.log("NULL!!!\n"+text); process.exit()}
   else{
@@ -192,10 +185,6 @@ function analyzeTwit(tw) {
           if(LOG) console.log("----->'.!?.'");
           word = '.!?.'
         }
-        // else
-        // if(word.length == 1){
-        //   if(LOG) console.log("----->_");
-        // }
         else{         
           var list
           const char0 = word.charAt(0)
@@ -212,18 +201,21 @@ function analyzeTwit(tw) {
                   break;
                 case '#':
                   list = curTweet.hashtags
+                  word = word.toLowerCase()
                   if(LOG) console.log("----->{hashtags}");
                   break;
                 case '$':
                   list = curTweet.symbols
+                  word = word.toUpperCase()
                   if(LOG) console.log("----->{symbols}");
                   break;
               }
             break;
     
             default:
-                list = curTweet.words
-                if(LOG) console.log("----->{words}");
+              word = word.toLowerCase()
+              list = curTweet.words
+              if(LOG) console.log("----->{words}");
           }
     
           /* Add keyword to curTweet list */
@@ -231,8 +223,9 @@ function analyzeTwit(tw) {
             list.push(word)
     
           /* Keep track of mentioned coins */
-          if(coinList.includes(word) && !curTweet.coins.includes(word)){ //TODO Check coin aliases?
-            curTweet.coins.push(word)
+          var word_uc = word.toUpperCase()
+          if(coinList.includes(word_uc) && !curTweet.coins.includes(word_uc)){ //TODO Check coin aliases?
+            curTweet.coins.push(word_uc)
             if(LOG) console.log("----->{COINS}");
           }
         }
