@@ -12,10 +12,6 @@ var config = {
 // const util = require('util');
 const fs = require('fs')
 const Twit = require('twit');
-// const JSONC = require('jsoncomp');
-
-// var Buffer = require('buffer').Buffer;
-// var zlib = require('zlib');
 
 var T = new Twit(config);
 
@@ -28,18 +24,6 @@ var keywords = fs.readFileSync(kwfile, 'utf-8')
 
 var Tstream = T.stream('statuses/filter', { track: keywords, tweet_mode: 'extended' })
 var Fstream = fs.createWriteStream(outfile, {flags:'w'});
-
-// // FIX 'undefined Base64' error in jsoncomp.pack - https://github.com/tcorral/JSONC/issues/7
-// global.Base64 = {
-//     encode: function(str) {
-//       return Buffer.from(str).toString('base64');
-//     },
-//   };
-//   global.gzip = {
-//     zip: function(str) {
-//       return zlib.gzipSync(Buffer.from(str));
-//     },
-//   }
 
 const nt = 100000
 var count = nt;
