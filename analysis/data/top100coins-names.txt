@@ -1,0 +1,102 @@
+Bitcoin
+Ethereum
+XRP
+Litecoin
+EOS
+BitcoinCash
+BinanceCoin
+Tether
+Stellar
+TRON
+Cardano
+BitcoinSV
+Monero
+IOTA
+Dash
+Maker
+NEO
+EthereumClassic
+NEM
+Ontology
+Zcash
+VeChain
+Tezos
+Waves
+Dogecoin
+USDCoin
+BasicAttentionToken
+BitcoinGold
+Crypto.comChain
+TrueUSD
+OmiseGO
+Qtum
+Decred
+Chainlink
+DigiByte
+Lisk
+ICON
+0x
+Steem
+Zilliqa
+Augur
+Holo
+Bytecoin
+Bitcoin Diamond
+BitShares
+Enjin Coin
+Nano
+BitTorrent
+Komodo
+Paxos Standard Token
+Aeternity
+Pundi X
+Aurora
+Siacoin
+Verge
+THETA
+Bytom
+Stratis
+Huobi Token
+IOST
+Dai
+Ravencoin
+Status
+Gemini Dollar
+Golem
+Ark
+Project Pai
+Populous
+Dynamic
+Revain
+Ardor
+KuCoin Shares
+Mixin
+Electroneum
+GXChain
+Digitex Futures
+Maximine Coin
+QASH
+MaidSafeCoin
+WAX
+Waltonchain
+Loopring
+PIVX
+Decentraland
+Zcoin
+Qubitica
+Loom Network
+aelf
+Crypto.com
+Wanchain
+Nexo
+ODEM
+Aion
+Power Ledger
+Metaverse ETP
+Ankr Network
+Kyber Network
+Bancor
+Elastos
+OKB
+
+
