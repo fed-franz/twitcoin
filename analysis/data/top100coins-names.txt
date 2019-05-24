@@ -14,6 +14,7 @@ Monero
 IOTA
 Dash
 Maker
+OKB
 NEO
 EthereumClassic
 NEM
@@ -26,7 +27,7 @@ Dogecoin
 USDCoin
 BasicAttentionToken
 BitcoinGold
-Crypto.comChain
+CryptocomChain
 TrueUSD
 OmiseGO
 Qtum
@@ -41,40 +42,40 @@ Zilliqa
 Augur
 Holo
 Bytecoin
-Bitcoin Diamond
+BitcoinDiamond
 BitShares
-Enjin Coin
+EnjinCoin
 Nano
 BitTorrent
 Komodo
-Paxos Standard Token
+PaxosStandardToken
 Aeternity
-Pundi X
+PundiX
 Aurora
 Siacoin
 Verge
 THETA
 Bytom
 Stratis
-Huobi Token
+HuobiToken
 IOST
 Dai
 Ravencoin
 Status
-Gemini Dollar
+GeminiDollar
 Golem
 Ark
-Project Pai
+ProjectPai
 Populous
 Dynamic
 Revain
 Ardor
-KuCoin Shares
+KuCoinShares
 Mixin
 Electroneum
 GXChain
-Digitex Futures
-Maximine Coin
+DigitexFutures
+MaximineCoin
 QASH
 MaidSafeCoin
 WAX
@@ -84,19 +85,16 @@ PIVX
 Decentraland
 Zcoin
 Qubitica
-Loom Network
+LoomNetwork
 aelf
-Crypto.com
+Cryptocom
 Wanchain
 Nexo
 ODEM
 Aion
-Power Ledger
-Metaverse ETP
-Ankr Network
-Kyber Network
+PowerLedger
+MetaverseETP
+AnkrNetwork
+KyberNetwork
 Bancor
 Elastos
-OKB
-
-

@@ -41,6 +41,8 @@ function extractHostname(url) {
 const datadir = './data/'
 const coinList = fs.readFileSync(datadir+'top100coins.txt').toString().split("\n");
 if(coinList[coinList.length-1]=='') coinList.pop() //Remove empty element
+const coinNamesList = fs.readFileSync(datadir+'top100coins-names.txt').toString().split("\n");
+if(coinNamesList[coinNamesList.length-1]=='') coinNamesList.pop() //Remove empty element
 
  // Get file pathname
 const tweetfile = (process.argv.slice(2))[0]
