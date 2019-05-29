@@ -104,6 +104,7 @@ function parseTweetFile(filename) {
 /**
  * TWEET ANALYSIS
  */
+var usersCount = {}
 var hashtagsCount = {}
 var symbolsCount = {}
 var mentionsCount = {}
@@ -115,6 +116,7 @@ for(c of coinList) {
   coinStats[c] = {
     // "aliases": [],
     "count": 0,
+    "users": {},
     "hashtags": {},
     "symbols": {},
     "mentions": {},
@@ -252,6 +254,22 @@ function analyzeTwit(tw) {
   /*_____ UPDATE GLOBAL STATS _____*/
   // TODO write generic function ? -- we are repating the same code 3 times
 
+  /* Update users stats */
+  var u = tw.user.screen_name
+  /* Global Stats */
+  if(usersCount[u])
+    usersCount[u]++;
+  else
+    usersCount[u]=1;
+
+  /* Coin Stats */
+  for(c of curTweet.coins){
+    if(coinStats[c].users[u])
+      coinStats[c].users[u]++;
+    else
+      coinStats[c].users[u]=1;
+  }
+
   /* Update cross-coin stats */
   for(c of curTweet.coins){
     /* Increase per-coin tweet counter */
@@ -361,6 +379,7 @@ function analyzeTwit(tw) {
  * OUTPUT
  */
 const statsfolder = '../data/stats/'
+const userStatsFile = 'user-stats.txt'
 const hashtagStatsFile = 'hashtag-stats.txt'
 const symbolStatsFile = 'symbol-stats.txt'
 const wordStatsFile = 'word-stats.txt'
@@ -388,6 +407,28 @@ function getSortedDict(dict){
   return items
 }
 
+/* sortCoinStats */
+function sortCoinStats(){
+  var items = Object.keys(coinStats).map(function(coin){
+    var stats=coinStats[coin]
+    
+    if (stats.count > 0) {      
+      Object.keys(stats).map(function(counter) {
+          if(counter != 'count')
+            stats[counter] = getSortedDict(stats[counter])
+        });
+    }
+
+    return [coin, stats]
+  }); 
+
+  items.sort(function(first, second) {
+    return second[1]['count'] - first[1]['count'];
+  });
+
+  coinStats = items
+}
+  
 /* Output results */
 function showResults() {
   console.log("Total Number of tweets: "+tcount)
@@ -397,13 +438,15 @@ function showResults() {
     fs.mkdirSync(statsfolder);
   }
 
+  fs.writeFileSync(statsfolder+userStatsFile, inspectObject(getSortedDict(usersCount)), 'utf-8');
   fs.writeFileSync(statsfolder+symbolStatsFile, inspectObject(getSortedDict(symbolsCount)), 'utf-8');
   fs.writeFileSync(statsfolder+hashtagStatsFile, inspectObject(getSortedDict(hashtagsCount)), 'utf-8');
   fs.writeFileSync(statsfolder+mentionStatsFile, inspectObject(getSortedDict(mentionsCount)), 'utf-8');
   fs.writeFileSync(statsfolder+urlStatsFile, inspectObject(getSortedDict(urlsCount)), 'utf-8');
   fs.writeFileSync(statsfolder+wordStatsFile, inspectObject(getSortedDict(wordsCount)), 'utf-8');
 
-  fs.writeFileSync(statsfolder+coinStatsFile, inspectObject(coinStats), 'utf-8'); 
+  sortCoinStats()
+  fs.writeFileSync(statsfolder+coinStatsFile, inspectObject(coinStats), 'utf-8');  //TODO getSortedObjArr(...) -> getSortedDict
 
   //TODO Try console.table() - print table with elements of array
 }
