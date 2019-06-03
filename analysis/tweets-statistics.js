@@ -29,6 +29,11 @@ function extractHostname(url) {
   //find & remove "?"
   hostname = hostname.split('?')[0];
 
+  //Get only main domain
+  var htokens = hostname.split('.')
+  var l = htokens.length;
+  hostname = htokens[l-2]+'.'+htokens[l-1];
+
   return hostname;
 }
 
