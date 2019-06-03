@@ -43,7 +43,7 @@ function extractHostname(url) {
  */
 
  /* Load coin list */
-const datadir = './data/'
+const datadir = __dirname+'/data/'
 const coinList = fs.readFileSync(datadir+'top100coins.txt').toString().split("\n");
 if(coinList[coinList.length-1]=='') coinList.pop() //Remove empty element
 const coinNamesList = fs.readFileSync(datadir+'top100coins-names.txt').toString().split("\n");
