@@ -156,7 +156,7 @@ function analyzeTwit(tw) {
   
       if(word.substring(0,7)!="http://" && word.substring(0,8)!="https://"){ //If not a link
         /* Map numbers to '.#.' */
-        if(word.match(/^(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+$/g)){
+        if(word.match(/^(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+$|[#$@](?=[\s]|$)/g)){
           if(LOG) console.log("----->'.#.'");
           word = ".#."
         }
