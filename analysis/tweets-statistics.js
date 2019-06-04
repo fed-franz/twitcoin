@@ -43,68 +43,44 @@ function extractHostname(url) {
  */
 
  /* Load coin list */
-const datadir = __dirname+'/data/'
-const coinList = fs.readFileSync(datadir+'top100coins.txt').toString().split("\n");
+const dataDir = __dirname+'/data/'
+const outDir = 'out'
+const coinList = fs.readFileSync(dataDir+'top100coins.txt').toString().split("\n");
 if(coinList[coinList.length-1]=='') coinList.pop() //Remove empty element
-const coinNamesList = fs.readFileSync(datadir+'top100coins-names.txt').toString().split("\n");
+const coinNamesList = fs.readFileSync(dataDir+'top100coins-names.txt').toString().split("\n");
 if(coinNamesList[coinNamesList.length-1]=='') coinNamesList.pop() //Remove empty element
 
- // Get file pathname
-const tweetfile = (process.argv.slice(2))[0]
+/* Get tweet filenames */
+const tweets_path = (process.argv.slice(2))[0]
+if (tweets_path == null){
+  console.log("ERR: filename required")
+  process.exit()
+}
 
-if (tweetfile == null){
-    console.log("ERR: filename required")
-    process.exit()
+var tweet_files = []
+
+var tp_info = fs.lstatSync(tweets_path)
+if (tp_info.isFile()) {
+  tweet_files.push(tweets_path)
+} else //If is a directory, get all .json files
+  if (tp_info.isDirectory()) {
+    fs.readdirSync(tweets_path).forEach(file => {
+      if(file.includes('tweets') && file.includes('.json')){
+        console.log(file);
+        tweet_files.push(tweets_path+'/'+file)
+      }
+    });
+} 
+
+console.log("Files to parse: "+tweet_files);
+
+if (tweet_files.length == 0) {
+  console.log("ERR: path does not correspond to any tweets file")
+  process.exit()
 }
 
 //
 var tcount = 0; //Tweets counter
-var n = 1
-
-function parseTweetFile(filename) {
-  var curFile = filename+'-'+n
-  console.log("Parsing "+curFile);
-  
-  if (!fs.existsSync(curFile)) {
-    return showResults()
-  }
-
-  var readStream = fs.createReadStream(curFile)
-  .pipe(replaceStream("}{", "}\n{"))
-  .pipe(split("\n"))
-
-  .on('data', function (obj) {
-    try {
-      // console.log("<OBJ>\n"+obj+"\n</OBJ>")
-      if(obj == '') return; //skip empty objects
-
-      var tw = JSON.parse(obj)
-      // if(tw.lang == 'en')
-        analyzeTwit(tw)
-      // else{
-      //   if(LOG) console.log("WARNING: lang is not 'en' -- skipping ("+tw.id_str+")");
-        
-      // }
-    } catch (e) {
-      return console.error(e+'\n'+obj);
-    }
-    tcount++;
-  })
-
-  readStream.on('end', function () {
-    return console.log("END")
-  })
-  
-  readStream.on('error', function (err) {
-    return console.log(err)
-  })
-
-  readStream.on('close', function () {
-    n++
-    //TODO if(filename)
-    parseTweetFile(filename) 
-  })  
-}
 
 /**
  * TWEET ANALYSIS
@@ -126,13 +102,11 @@ for(c of coinList) {
     "symbols": {},
     "mentions": {},
     "words": {},
-    "urls": {}, //TODO save domains only
+    "urls": {},
     "coins": {}
   }
 }
 
-
-//TODO Avoid duplicates in same tweet (don't count a keyword twice)
 //TODO Write function to link a keyword to a coin (BTC, #Bitcoin, bitcoin, $Bitcoin) - can we generalize it?
 function analyzeTwit(tw) {
   var curTweet = {
@@ -173,8 +147,8 @@ function analyzeTwit(tw) {
   }
 
   /* Parse Tweet */
-  var words = text.match(/(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+|([@#$][\w\u00C0-\u00FF]+)|[^\w\s\u0100-\u1FFF@$#]|http[\S]+|([^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]+['’-]?)*[^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]/g)
-  if(!words){ console.log("NULL!!!\n"+text); process.exit()}
+  var words = text.match(/(([£$€]?(\d+([%£$€]?|[\w]*))([.,:\/+-])?)*([£$€]?\d+[%£$€+\w]*))+|([@#$][\w\u00C0-\u00FF]+)|[^\w\s\u0100-\u1FFF@$#]|http[\S]+|([^@#$\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]+['’-]?)*[^\uD800-\uDFFF\s?!&+,:;=|"'’‘–<>«».^*\\\/\[\]()%-]/g)
+  if(!words){ console.error("ERROR: no words matched in: \n"+text); process.exit()}
   else{
     words.map(function (word) {
       word = word.trim()
@@ -383,7 +357,7 @@ function analyzeTwit(tw) {
 /**
  * OUTPUT
  */
-const statsfolder = '../data/stats/'
+const statsfolder = 'out/stats/'
 const userStatsFile = 'user-stats.txt'
 const hashtagStatsFile = 'hashtag-stats.txt'
 const symbolStatsFile = 'symbol-stats.txt'
@@ -435,8 +409,13 @@ function sortCoinStats(){
 }
   
 /* Output results */
-function showResults() {
+function saveResults() {
   console.log("Total Number of tweets: "+tcount)
+
+  // Create output folder
+  if (!fs.existsSync(outDir)){
+    fs.mkdirSync(outDir);
+  }
 
   // Check and create Stats folder
   if (!fs.existsSync(statsfolder)){
@@ -457,4 +436,45 @@ function showResults() {
 }
 
 /* RUN */
-parseTweetFile(tweetfile)
+function parseTweets() {
+    if(tweet_files.length == 0){
+      console.log("___DONE___");
+      return saveResults()
+    }
+
+    var curFile = tweet_files.shift()
+
+    console.log("Parsing "+curFile);
+  
+    var readStream = fs.createReadStream(curFile)
+    .pipe(replaceStream("}{", "}\n{"))
+    .pipe(split("\n"))
+  
+    .on('data', function (obj) {
+      try {
+        // Skip empty objects
+        if(obj == '') return;
+  
+        var tw = JSON.parse(obj)
+        analyzeTwit(tw)
+      } catch (e) {
+        return console.error(e+'\n'+obj);
+      }
+      tcount++;
+    })
+  
+    readStream.on('end', function () {
+      return console.log("___END___")
+    })
+    
+    readStream.on('error', function (err) {
+      return console.log(err)
+    })
+  
+    readStream.on('close', function () {
+      parseTweets()
+    })  
+  }
+
+  parseTweets()
+  
